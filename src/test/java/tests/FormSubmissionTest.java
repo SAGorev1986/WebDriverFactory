@@ -1,29 +1,27 @@
 package tests;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
+import factory.WebDriverFactory;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import pages.FormPage;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.UUID;
 
 public class FormSubmissionTest {
     private WebDriver driver;
     private FormPage formPage;
 
-    // 1. Меняем ссылку на страницу входа
-    private static final String LOGIN_URL = "https://wishlist.otus.kartushin.su/login";
-
-    @BeforeAll
-    public static void setupClass() {
-        WebDriverManager.chromedriver().setup();
-    }
+    // ПАРАМЕТРИЗАЦИЯ URL (Замечание преподавателя №1 закрыто)
+    private static final String BASE_URL = System.getProperty("test.url", "https://wishlist.otus.kartushin.su/register");
 
     @BeforeEach
     public void setUp() {
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
+        String browser = System.getProperty("browser", "chrome");
+        ChromeOptions options = new ChromeOptions();
+        // options.addArguments("--headless=new");
+
+        driver = WebDriverFactory.createNewDriver(browser, options);
         formPage = new FormPage(driver);
     }
 
@@ -34,26 +32,47 @@ public class FormSubmissionTest {
         }
     }
 
+    // ТЕСТ 1: Успешная регистрация
     @Test
-    public void testFormSubmissionWithPasswordCheck() {
-        System.out.println("Начало теста заполнения формы для пользователя: DefaultUser");
+    public void testSuccessfulRegistration() {
+        String uniqueId = UUID.randomUUID().toString().substring(0, 5);
+        String user = "RegUser_" + uniqueId;
 
-        // 2. Открываем страницу по новой ссылке
-        formPage.open(LOGIN_URL);
+        formPage.open(BASE_URL);
+        formPage.register(user, user + "@test.com", "Password123!");
 
-        // 3. Заполняем форму
-        formPage.fillForm("DefaultUser", "12345678");
+        formPage.assertRegisteredSuccessfully();
+    }
 
-        // 4. Отправляем форму
-        formPage.submit();
+    // ТЕСТ 2: Успешная авторизация (НОВЫЙ)
+    @Test
+    public void testSuccessfulLogin() {
+        String uniqueId = UUID.randomUUID().toString().substring(0, 5);
+        String user = "AuthUser_" + uniqueId;
+        String pass = "Password123!";
 
-        // 5. Проверка (раскомментируйте нужную):
-        // Если данные неверные и мы ждем ошибку:
-        // assertTrue(formPage.isErrorMessageDisplayed(), "Сообщение об ошибке не появилось");
+        // 1. Сначала регистрируем пользователя, чтобы он существовал в системе
+        formPage.open(BASE_URL);
+        formPage.register(user, user + "@test.com", pass);
+        formPage.assertRegisteredSuccessfully(); // Убеждаемся, что мы на странице /login
 
-        // Если данные верные и мы ждем перехода на другую страницу:
-        // assertTrue(driver.getCurrentUrl().contains("wishlists"), "Переход в личный кабинет не произошел");
+        // 2. Выполняем вход под только что созданным пользователем
+        formPage.login(user, pass);
 
-        System.out.println("Тест завершен");
+        // 3. Проверяем успешный вход (ассерт внутри Page Object)
+        formPage.assertLoginSuccessful();
+    }
+
+    // ТЕСТ 3: Неудачная авторизация (обработка ошибок)
+    @Test
+    public void testFailedLogin() {
+        // Переходим сразу на страницу логина
+        String loginUrl = BASE_URL.replace("/register", "/login");
+
+        formPage.open(loginUrl);
+        formPage.login("FakeUser_Not_Exists", "WrongPassword");
+
+        // Проверяем появление ошибки (ассерт внутри Page Object)
+        formPage.assertLoginFailed();
     }
 }

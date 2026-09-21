@@ -35,7 +35,6 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.version}</version>
-            <scope>test</scope>
         </dependency>
         <!-- Логирование: SLF4J + Logback (для записи в файл и консоль) -->
         <dependency>

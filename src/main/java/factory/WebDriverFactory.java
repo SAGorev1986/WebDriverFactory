@@ -1,38 +1,43 @@
 package factory;
 
-import enums.Browser;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.edge.EdgeDriver;
-import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 
 public class WebDriverFactory {
 
-    // Пример 1 из задания: WebDriver wd = WebDriverFactory.createNewDriver("chrome");
     public static WebDriver createNewDriver(String browserName) {
         return createNewDriver(browserName, null);
     }
 
-    // Пример 2 из задания: WebDriver wd = WebDriverFactory.createNewDriver("firefox", options);
     public static WebDriver createNewDriver(String browserName, Object options) {
-        Browser browser = Browser.fromString(browserName);
+        WebDriver driver;
+        String browser = browserName.toLowerCase();
 
         switch (browser) {
-            case CHROME:
+            case "chrome":
                 WebDriverManager.chromedriver().setup();
-                return (options != null) ? new ChromeDriver((ChromeOptions) options) : new ChromeDriver();
-            case FIREFOX:
+                if (options instanceof ChromeOptions) {
+                    driver = new ChromeDriver((ChromeOptions) options);
+                } else {
+                    driver = new ChromeDriver();
+                }
+                break;
+            case "firefox":
                 WebDriverManager.firefoxdriver().setup();
-                return (options != null) ? new FirefoxDriver((FirefoxOptions) options) : new FirefoxDriver();
-            case EDGE:
-                WebDriverManager.edgedriver().setup();
-                return (options != null) ? new EdgeDriver((EdgeOptions) options) : new EdgeDriver();
+                if (options instanceof FirefoxOptions) {
+                    driver = new FirefoxDriver((FirefoxOptions) options);
+                } else {
+                    driver = new FirefoxDriver();
+                }
+                break;
             default:
                 throw new IllegalArgumentException("Неподдерживаемый браузер: " + browserName);
         }
+        driver.manage().window().maximize();
+        return driver;
     }
 }
