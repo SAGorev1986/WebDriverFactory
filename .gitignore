@@ -1,4 +1,5 @@
-# IDEA
+cat > .gitignore << 'EOF'
+# IntelliJ IDEA
 .idea/
 *.iml
 *.iws
@@ -13,10 +14,10 @@ pom.xml.versionsBackup
 pom.xml.next
 release.properties
 
-# Логи (сами файлы логов не коммитим, но папку можно)
-logs/
-*.log
-
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
+EOF
